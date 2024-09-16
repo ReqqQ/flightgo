@@ -1,9 +1,16 @@
 package DomainUsersEntity
 
+type UsersInterface interface {
+	GetEmail() string
+}
+
 type UsersEntity struct {
-	Id      int
-	Name    string
-	Surname string
+	Id       int
+	Email    string
+	Name     string
+	Surname  string
+	Password string
+	Token    string
 }
 
 type UsersContacts struct {
@@ -26,6 +33,9 @@ func (r UsersContacts) GetName() string {
 }
 func (r UsersContacts) GetSurname() string {
 	return r.Surname
+}
+func (r UsersEntity) GetEmail() string {
+	return r.Email
 }
 func (r UsersContacts) GetEmail() string {
 	return r.Email

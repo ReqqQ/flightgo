@@ -7,6 +7,7 @@ import (
 	AppSecuritySecurityDTO "gontact/App/Security/DTO"
 	DomainGroupTypesEntity "gontact/Domain/GroupTypes/Entity"
 	DomainGroupTypesVO "gontact/Domain/GroupTypes/VO"
+	DomainUsers "gontact/Domain/Users"
 	DomainUsersEntity "gontact/Domain/Users/Entity"
 	DomainUsersVO "gontact/Domain/Users/VO"
 )
@@ -39,13 +40,33 @@ func GetCreateContactCommand(c *fiber.Ctx, dto AppSecuritySecurityDTO.TokenUserD
 
 	return command.SetUserId(dto.GetId())
 }
+
+func GetCreateUser(c *fiber.Ctx) AppContactGetGroupTypesCommand.CreateUserCommand {
+	var command AppContactGetGroupTypesCommand.CreateUserCommand
+	err := c.BodyParser(&command)
+	if err != nil {
+		return AppContactGetGroupTypesCommand.CreateUserCommand{}
+	}
+
+	return command
+}
+
 func GetUserContactEntity(command AppContactGetGroupTypesCommand.CreateContactCommand) DomainUsersEntity.UsersContacts {
 	return DomainUsersEntity.UsersContacts{
 		UserId:  command.GetUserId(),
 		Name:    command.GetUserName(),
 		Surname: command.GetUserSurname(),
-		Email:   command.GetUserEmail(),
+		Email:   command.GetEmail(),
 		Phone:   command.GetUserPhone(),
+	}
+}
+func GetUserEntity(command AppContactGetGroupTypesCommand.CreateUserCommand) DomainUsersEntity.UsersEntity {
+	return DomainUsersEntity.UsersEntity{
+		Name:     command.GetName(),
+		Surname:  command.GetSurname(),
+		Email:    command.GetEmail(),
+		Password: DomainUsers.HashPassword(command.GetPassword()),
+		Token:    DomainUsers.GenerateUserToken(),
 	}
 }
 func GetGroupTypesCommand(dto AppSecuritySecurityDTO.TokenUserDTO) AppContactGetGroupTypesCommand.GroupTypesCommand {
@@ -53,6 +74,7 @@ func GetGroupTypesCommand(dto AppSecuritySecurityDTO.TokenUserDTO) AppContactGet
 		UserId: dto.GetId(),
 	}
 }
+
 func getUserVO(command AppContactGetGroupTypesCommand.UserCommand) DomainUsersVO.UserVO {
 	return DomainUsersVO.UserVO{
 		UserId: command.GetUserId(),

@@ -1,6 +1,12 @@
 package DomainUsers
 
 import (
+	"encoding/hex"
+	"strconv"
+	"time"
+
+	"github.com/matthewhartstonge/argon2"
+	"github.com/thanhpk/randstr"
 	DomainUsersEntity "gontact/Domain/Users/Entity"
 	DomainUsersVO "gontact/Domain/Users/VO"
 	InterfaceUsers "gontact/Interface/Users"
@@ -15,17 +21,47 @@ func GetUserByToken(vo DomainUsersVO.UserTokenVO) DomainUsersEntity.UsersEntity 
 func GetUserContacts(vo DomainUsersVO.UserContactVO) []DomainUsersEntity.UsersContacts {
 	return getUserContactsCollection(InterfaceUsers.GetDbUserContacts(vo))
 }
+func GetUsers() []DomainUsersEntity.UsersEntity {
+	return getUsersCollection(InterfaceUsers.GetDbUsers())
+}
 func CreateUserContact(entity DomainUsersEntity.UsersContacts) {
 	InterfaceUsers.CreateUserContact(entity)
 }
-func IsUserContactExists(entity DomainUsersEntity.UsersContacts, collection []DomainUsersEntity.UsersContacts) bool {
+
+func IsEntityExists(entity interface{}, collection interface{}) bool {
 	isExists := false
-	for _, dbEntity := range collection {
-		if entity.GetEmail() == dbEntity.GetEmail() {
-			isExists = true
-			break
+	switch t := collection.(type) {
+	case []DomainUsersEntity.UsersEntity:
+		for _, dbEntity := range t {
+			if entity.(DomainUsersEntity.UsersEntity).GetEmail() == dbEntity.GetEmail() {
+				isExists = true
+				break
+			}
+		}
+	case []DomainUsersEntity.UsersContacts:
+		for _, dbEntity := range t {
+			if entity.(DomainUsersEntity.UsersContacts).GetEmail() == dbEntity.GetEmail() {
+				isExists = true
+				break
+			}
 		}
 	}
 
 	return isExists
+}
+func HashPassword(password string) string {
+	argon := argon2.DefaultConfig()
+	hash, _ := argon.Hash([]byte(password), nil)
+
+	token := string(hash.Encode())
+
+	return token
+}
+func GenerateUserToken() string {
+	argon := argon2.DefaultConfig()
+	hash, _ := argon.Hash([]byte(randstr.Hex(5)), []byte(strconv.FormatInt(time.Now().UnixMicro(), 10)))
+
+	token := hex.EncodeToString(hash.Hash)
+
+	return token
 }
